@@ -103,7 +103,15 @@ void StreamEngine::closeStream(AAudioStream *stream) {
 }
 void StreamEngine::startStream(AAudioStream *stream) {
 
+    /// per https://developer.android.com/ndk/guides/audio/aaudio/aaudio
+
+    aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STARTING;
+    aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+    int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
     aaudio_result_t result = AAudioStream_requestStart(stream);
+    result = AAudioStream_waitForStateChange(stream, inputState, &nextState, timeoutNanos);
+
     if (result != AAUDIO_OK) {
         LOGE("Error starting stream. %s", AAudio_convertResultToText(result));
     }
@@ -111,7 +119,15 @@ void StreamEngine::startStream(AAudioStream *stream) {
 void StreamEngine::stopStream(AAudioStream *stream) {
 
     if (stream != nullptr) {
+
+        aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STOPPING;
+        aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+        int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
         aaudio_result_t result = AAudioStream_requestStop(stream);
+
+        result = AAudioStream_waitForStateChange(stream, inputState, &nextState, timeoutNanos);
+
         if (result != AAUDIO_OK) {
             LOGE("Error stopping stream. %s", AAudio_convertResultToText(result));
         }
@@ -140,7 +156,14 @@ void StreamEngine::openPlaybackStream() {
 void StreamEngine::closePlaybackStream() {
 
     if (playStream_ != nullptr) {
+        aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STOPPING;
+        aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+        int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
         aaudio_result_t result = AAudioStream_requestStop(playStream_);
+
+        result = AAudioStream_waitForStateChange(playStream_, inputState, &nextState, timeoutNanos);
+
         //aaudio_result_t result = AAudioStream_close(playStream);
         if (result != AAUDIO_OK) {
             LOGE("Error closing stream. %s", AAudio_convertResultToText(result));

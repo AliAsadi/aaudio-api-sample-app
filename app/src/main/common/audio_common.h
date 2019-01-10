@@ -23,6 +23,7 @@
 
 // Time constants
 #define NANOS_PER_SECOND 1000000000L
+#define AAUDIO_NANOS_PER_MILLISECOND 1000000L
 
 constexpr int kMonoChannelCount = 1;
 constexpr int kStereoChannelCount = 2;
