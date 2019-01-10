@@ -245,9 +245,16 @@ AAudioStreamBuilder *StreamEngine::createStreamBuilder() {
 
 
 void StreamEngine::warnIfNotLowLatency(AAudioStream *stream) {
-
-    if (AAudioStream_getPerformanceMode(stream) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY) {
-        LOGW("Stream is NOT low latency. Check your requested format, sample rate and channel count");
+    aaudio_performance_mode_t performance_mode = AAudioStream_getPerformanceMode(stream);
+    switch (performance_mode) {
+        case AAUDIO_PERFORMANCE_MODE_LOW_LATENCY:
+            LOGW("Stream is low latency. Good!");
+            break;
+        case AAUDIO_PERFORMANCE_MODE_POWER_SAVING:
+            LOGW("Stream is NOT low latency. It is Power Saving. Check your requested format, sample rate and channel count");
+            break;
+        default:
+            LOGW("Stream does not offer particular performance needs. Default.");
     }
 }
 
