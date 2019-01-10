@@ -118,9 +118,7 @@ void StreamEngine::stopStream(AAudioStream *stream) {
     }
 }
 
-/**
- * Stops and closes the playback and recording streams.
- */
+
 void StreamEngine::openPlaybackStream() {
 
     // Note: The order of stream creation is important. We create the playback stream first,
@@ -128,7 +126,7 @@ void StreamEngine::openPlaybackStream() {
     // recording stream. By matching the properties we should get the lowest latency path
     createPlaybackStream();
 
-    // Now start the recording stream first so that we can read from it during the playback
+    // Now start the stream so we can read from it during playback
     // stream's dataCallback
     if (playStream_ != nullptr) {
         startStream(playStream_);
@@ -136,6 +134,9 @@ void StreamEngine::openPlaybackStream() {
         LOGE("Failed to create recording and/or playback stream");
     }
 }
+/**
+ * Stops and closes the playback and recording streams.
+ */
 void StreamEngine::closePlaybackStream() {
 
     if (playStream_ != nullptr) {
@@ -175,11 +176,13 @@ void StreamEngine::restartStreams() {
  * If the value is set to AAUDIO_UNSPECIFIED then the default playback device will be used.
  */
 void StreamEngine::createPlaybackStream() {
-
+/// step 1 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
     AAudioStreamBuilder *builder = createStreamBuilder();
 
     if (builder != nullptr) {
+/// step 2 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
         setupPlaybackStreamParameters(builder);
+/// step 3 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
         aaudio_result_t result = AAudioStreamBuilder_openStream(builder, &playStream_);
         if (result == AAUDIO_OK && playStream_ != nullptr) {
 
@@ -232,7 +235,6 @@ void StreamEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
  * @return a new stream builder object
  */
 AAudioStreamBuilder *StreamEngine::createStreamBuilder() {
-
     AAudioStreamBuilder *builder = nullptr;
     aaudio_result_t result = AAudio_createStreamBuilder(&builder);
     if (result != AAUDIO_OK) {
