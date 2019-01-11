@@ -234,8 +234,8 @@ void StreamEngine::createPlaybackStream() {
  */
 void StreamEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
 
-    AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
-    AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
+//    AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);  // occurs by default
+//    AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);  // output by default
     AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
     AAudioStreamBuilder_setChannelCount(builder, 2); // stereo
     AAudioStreamBuilder_setSampleRate(builder, 48000); // 48KHz
