@@ -103,7 +103,15 @@ void StreamEngine::closeStream(AAudioStream *stream) {
 }
 void StreamEngine::startStream(AAudioStream *stream) {
 
+    /// per https://developer.android.com/ndk/guides/audio/aaudio/aaudio
+
+    aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STARTING;
+    aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+    int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
     aaudio_result_t result = AAudioStream_requestStart(stream);
+    result = AAudioStream_waitForStateChange(stream, inputState, &nextState, timeoutNanos);
+
     if (result != AAUDIO_OK) {
         LOGE("Error starting stream. %s", AAudio_convertResultToText(result));
     }
@@ -111,16 +119,22 @@ void StreamEngine::startStream(AAudioStream *stream) {
 void StreamEngine::stopStream(AAudioStream *stream) {
 
     if (stream != nullptr) {
+
+        aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STOPPING;
+        aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+        int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
         aaudio_result_t result = AAudioStream_requestStop(stream);
+
+        result = AAudioStream_waitForStateChange(stream, inputState, &nextState, timeoutNanos);
+
         if (result != AAUDIO_OK) {
             LOGE("Error stopping stream. %s", AAudio_convertResultToText(result));
         }
     }
 }
 
-/**
- * Stops and closes the playback and recording streams.
- */
+
 void StreamEngine::openPlaybackStream() {
 
     // Note: The order of stream creation is important. We create the playback stream first,
@@ -128,7 +142,7 @@ void StreamEngine::openPlaybackStream() {
     // recording stream. By matching the properties we should get the lowest latency path
     createPlaybackStream();
 
-    // Now start the recording stream first so that we can read from it during the playback
+    // Now start the stream so we can read from it during playback
     // stream's dataCallback
     if (playStream_ != nullptr) {
         startStream(playStream_);
@@ -136,10 +150,20 @@ void StreamEngine::openPlaybackStream() {
         LOGE("Failed to create recording and/or playback stream");
     }
 }
+/**
+ * Stops and closes the playback and recording streams.
+ */
 void StreamEngine::closePlaybackStream() {
 
     if (playStream_ != nullptr) {
+        aaudio_stream_state_t inputState = AAUDIO_STREAM_STATE_STOPPING;
+        aaudio_stream_state_t nextState = AAUDIO_STREAM_STATE_UNINITIALIZED;
+        int64_t timeoutNanos = 100 * AAUDIO_NANOS_PER_MILLISECOND;
+
         aaudio_result_t result = AAudioStream_requestStop(playStream_);
+
+        result = AAudioStream_waitForStateChange(playStream_, inputState, &nextState, timeoutNanos);
+
         //aaudio_result_t result = AAudioStream_close(playStream);
         if (result != AAUDIO_OK) {
             LOGE("Error closing stream. %s", AAudio_convertResultToText(result));
@@ -175,11 +199,13 @@ void StreamEngine::restartStreams() {
  * If the value is set to AAUDIO_UNSPECIFIED then the default playback device will be used.
  */
 void StreamEngine::createPlaybackStream() {
-
+/// step 1 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
     AAudioStreamBuilder *builder = createStreamBuilder();
 
     if (builder != nullptr) {
+/// step 2 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
         setupPlaybackStreamParameters(builder);
+/// step 3 of https://developer.android.com/ndk/guides/audio/aaudio/aaudio
         aaudio_result_t result = AAudioStreamBuilder_openStream(builder, &playStream_);
         if (result == AAUDIO_OK && playStream_ != nullptr) {
 
@@ -208,11 +234,11 @@ void StreamEngine::createPlaybackStream() {
  */
 void StreamEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
 
-    AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);
-    AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);
+//    AAudioStreamBuilder_setDeviceId(builder, playbackDeviceId_);  // occurs by default
+//    AAudioStreamBuilder_setDirection(builder, AAUDIO_DIRECTION_OUTPUT);  // output by default
     AAudioStreamBuilder_setFormat(builder, AAUDIO_FORMAT_PCM_I16);
-    AAudioStreamBuilder_setChannelCount(builder, 1); //mono
-    AAudioStreamBuilder_setSampleRate(builder, 48000); //48Hz
+    AAudioStreamBuilder_setChannelCount(builder, 2); // stereo
+    AAudioStreamBuilder_setSampleRate(builder, 48000); // 48KHz
 
     AAudioStreamBuilder_setErrorCallback(builder, ::errorCallback, this);
 
@@ -232,7 +258,6 @@ void StreamEngine::setupPlaybackStreamParameters(AAudioStreamBuilder *builder) {
  * @return a new stream builder object
  */
 AAudioStreamBuilder *StreamEngine::createStreamBuilder() {
-
     AAudioStreamBuilder *builder = nullptr;
     aaudio_result_t result = AAudio_createStreamBuilder(&builder);
     if (result != AAUDIO_OK) {
@@ -243,9 +268,16 @@ AAudioStreamBuilder *StreamEngine::createStreamBuilder() {
 
 
 void StreamEngine::warnIfNotLowLatency(AAudioStream *stream) {
-
-    if (AAudioStream_getPerformanceMode(stream) != AAUDIO_PERFORMANCE_MODE_LOW_LATENCY) {
-        LOGW("Stream is NOT low latency. Check your requested format, sample rate and channel count");
+    aaudio_performance_mode_t performance_mode = AAudioStream_getPerformanceMode(stream);
+    switch (performance_mode) {
+        case AAUDIO_PERFORMANCE_MODE_LOW_LATENCY:
+            LOGW("Stream is low latency. Good!");
+            break;
+        case AAUDIO_PERFORMANCE_MODE_POWER_SAVING:
+            LOGW("Stream is NOT low latency. It is Power Saving. Check your requested format, sample rate and channel count");
+            break;
+        default:
+            LOGW("Stream does not offer particular performance needs. Default.");
     }
 }
 
