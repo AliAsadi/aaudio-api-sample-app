@@ -6,9 +6,9 @@
 This sample demonstrates:
 
 * how to use the AAudio API
-* Commincatue between java and C++
-* Load audio file and convert to byte array
-* Creates an output playback stream and its confeguration
+* Communicate between java and C++
+* Load the audio file and convert to byte array
+* Creates an output playback stream and its configuration
 * Write buffer to the playback streamer and playing audio Using AAudio Api.
 
 
@@ -26,7 +26,7 @@ To understand:
 * What Is PCM Audio?
 * Understanding Sample Rate! and wich sample rate you shold use?
 * Understanding Bit Depth! to use int16 or float? 
-* What is sound? - not requirement but it's necessary for a deeper understand
+* What is sound? - not a requirement but it's necessary for a deeper understanding
 
 # Misc
  You may also want to view the [ I/O 2017 Best practices for Android audio session](https://www.youtube.com/watch?v=C0BPXZIvG-Q)
@@ -53,5 +53,5 @@ OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
 
 # Contributing
-Just make pull request. You are in!
+Just make a pull request. You are in!
 
