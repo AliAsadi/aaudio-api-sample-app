@@ -1,0 +1,45 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+hide footbox
+autonumber
+
+
+AAudioApi -> AAudioApi:native_init()
+AAudioApi -> StreamEngine:start()
+StreamEngine -> StreamEngine:openPlaybackStream()
+StreamEngine -> StreamEngine :createPlaybackStream()
+StreamEngine -> AAudio:AAudio_createStreamBuilder()
+StreamEngine -> StreamEngine :setupPlaybackStreamParameters()
+StreamEngine -> AAudio:AAudioStreamBuilder_setFormat()
+StreamEngine -> AAudio:AAudioStreamBuilder_setChannelCount()
+StreamEngine -> AAudio:AAudioStreamBuilder_setSampleRate()
+StreamEngine -> AAudio:AAudioStreamBuilder_setErrorCallback()
+note right:6~10 steps Sets the stream parameters
+StreamEngine -> StreamEngine:errorCallback()
+StreamEngine -> AAudio:AAudioStream_getState()
+StreamEngine -> StreamEngine:restartStreams()
+note right:If it fails, reconnect
+StreamEngine -> StreamEngine:closePlaybackStream()
+StreamEngine -> StreamEngine:openPlaybackStream()
+StreamEngine -> AAudio:AAudioStreamBuilder_openStream()
+StreamEngine -> AAudio:AAudioStream_getSampleRate()
+StreamEngine -> AAudio:AAudioStream_getFramesPerBurst()
+StreamEngine -> StreamEngine:warnIfNotLowLatency(AAudioStream)
+StreamEngine -> AAudio:AAudioStream_setBufferSizeInFrames()
+StreamEngine -> audio_common.h:PrintAudioStreamInfo(AAudioStream)
+StreamEngine -> AAudio:AAudioStreamBuilder_delete()
+StreamEngine -> StreamEngine:writeBufferToStreamer()
+StreamEngine -> AAudio:AAudioStream_write()
+AAudioApi -> StreamEngine:stop()
+StreamEngine -> StreamEngine:closePlaybackStream()
+StreamEngine -> AAudio:aaudio_stream_state_t
+note right:Restore the aaudio_STREAM_STATE_t related state
+StreamEngine -> AAudio:AAudioStream_requestStop()
+StreamEngine -> AAudio:AAudioStream_waitForStateChange()
+StreamEngine -> AAudio:AAudioStream=nullptr
+
+
+
+
+@enduml
