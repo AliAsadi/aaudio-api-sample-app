@@ -24,9 +24,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         AAudioApi.init();
 
-        short[] buffer = readFile();
+//        short[] buffer = readFile();
 
-        AAudioApi.writeBuffer(buffer);
+//        AAudioApi.writeBuffer(buffer);
 
         button = findViewById(R.id.button);
         button.setOnClickListener(this);
@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             isPlaying = false;
         } else {
             AAudioApi.start();
+            AAudioApi.writeBuffer(readFile());
 
             button.setText("stop");
             isPlaying = true;

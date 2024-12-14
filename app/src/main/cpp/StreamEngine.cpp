@@ -33,12 +33,20 @@ void StreamEngine::start() {
 
     openPlaybackStream();
 
-    thread t1(&StreamEngine::writeBufferToStreamer,this);
-    t1.detach();
+//    thread t1(&StreamEngine::writeBufferToStreamer,this);
+//    t1.detach();
 }
 void StreamEngine::writeBuffer(short *buffer) {
-    //AAudioStream_write(recordingStream_, buffer, 5000, 0);
-    buffer_ = buffer;
+    if (playStream_ == nullptr) {
+        openPlaybackStream();
+    }
+    thread th([=](){
+        AAudioStream_write(playStream_, buffer, 800000, 200);
+    });
+    th.detach();
+
+//    AAudioStream_write(playStream_, buffer_, 800000, 200);
+//    buffer_ = buffer;
 }
 
 ///////////////////////////////// LOCAL METHOD ////////////////////////////////////
